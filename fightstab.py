@@ -2,13 +2,17 @@ from dash import Dash, html, dcc
 from dash import Dash, dcc, html, Output, Input, State, ALL
 import dash_bootstrap_components as dbc
 from fight_lib import *
-
+from fight_modifiers import *
+from wound_modifiers import *
+from rolloff_modifiers import *
 
 class FightTab:
 
     LABEL   = "Fight"
     ID      = "fight-tab"
     DATA_ID = "fight-tab-data"
+
+
 
     def build_tab(self):
         tabcard = dbc.Card(
@@ -29,10 +33,11 @@ class FightTab:
                         Output("damage-graph", "figure"),
                         Input("calculate-button", "n_clicks"),
                         State({"input":"atk_input", "name":ALL}, 'value'), 
-                        State({"input":"def_input", "name":ALL}, 'value'))
-        def calculate(n_clicks, atk_stats, def_stats):
+                        State({"input":"def_input", "name":ALL}, 'value'),
+                        State({"type":"modifier", "name":ALL}, 'value'))
+        def calculate(n_clicks, atk_stats, def_stats, modifiers):
             print(def_stats)
-            f = FightRoller(atk_stats, def_stats)
+            f = FightRoller(atk_stats, def_stats, modifiers)
             wounds_hist = f.wounds()
             return f.GetWinRate(), wounds_hist
 
@@ -114,7 +119,37 @@ class FightTab:
                             ])                        
 
                         ]), 
+
+                        # Modifiers
                         html.Br(),
+                        html.H4("Duel Roll Modifiers"),
+                        html.Hr(),
+                        dbc.Row([
+
+                            dbc.Col([
+                                html.H5("Attacker Modifiers"),
+                                dcc.Checklist(list(duel_roll_modifiers_dict().keys()), id={"name":"atk-duel-roll-modifiers-checklist", "type":"modifier"}),
+                                html.Br(),
+                                html.H5("Roll Off Modifiers"),
+                                dcc.Checklist(list(atk_rolloff_modifiers_dict().keys()), id={"name":"atk-rolloff-modifiers-checklist", "type":"modifier"}),
+                                html.Br(),
+                                html.H5("Wound Modifiers"),
+                                dcc.Checklist(list(wound_modifiers_dict().keys()), id={"name":"wound-modifiers-checklist", "type":"modifier"})
+                            ]),
+
+
+                            dbc.Col([
+                                html.H5("Defender Modifiers"),
+                                dcc.Checklist(list(duel_roll_modifiers_dict().keys()), id={"name":"def-duel-roll-modifiers-checklist", "type":"modifier"}),
+                                html.Br(),
+                                html.H5("Roll Off Modifiers"),
+                                dcc.Checklist(list(def_rolloff_modifiers_dict().keys()), id={"name":"def-rolloff-modifiers-checklist", "type":"modifier"}),
+                                html.Br()
+
+                            ]),
+
+                        ]), 
+                        html.Br(), 
                         html.Button("Calculate", id="calculate-button")
 
                     ])
